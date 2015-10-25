@@ -1,31 +1,46 @@
-<!-- The Orginal file (SPA) from Feb 8, 2012 -->
-
-<%@ Page Language="C#" EnableViewState="false" %>
+<%@ Page Language="C#" Debug="true" EnableViewState="false" %>
 
 <%@ Import Namespace="System.Net" %>
 <%@ Import Namespace="System.IO" %>
 <%@ Import Namespace="System.Text" %>
 <!DOCTYPE html>
 <html>
-
 <head id="Head1" runat="server">
     <title runat="server" id="ThePageTitle">Mountains & Rocks Stats</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
-    <script language="javascript" type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script src="js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             $("#myTable").tablesorter();
         });
     </script>
-    <script language="javascript" type="text/javascript">
+    <script>
+        function warn(clientId, clientId2) {
+            if (confirm('This may take several minutes, do you wish to continue?')) {
+                if (checkURL(clientId)) {
+                    //document.getElementById(clientId2).disabled = true;  //this stops the post, so don't use it!
+                    $('#' + clientId2).hide();
+                    $('#DivData').hide();  //hide the previous results. 
+                    $('#DivWait').slideDown('slow');
+                    return true;
+                }
+                else {
+                    alert('URL is invalid. Please read the instructions on the page.');
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+
         function checkURL(TheID) {
             var v = document.getElementById(TheID).value;
             v = $.trim(v);
             document.getElementById(TheID).value = v;
             var i = v.indexOf("http://www.summitpost.org/users/");
-            var l = v.length;
 
-            if (i == 0 && i < l)
+            if (i == 0 && i < v.length)
                 return true;
             else
                 return false;
@@ -38,8 +53,8 @@
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            txtUserPageURL.Attributes.Add("onfocus", "this.value=''");
-            btnGo.Attributes.Add("onclick", "if(checkURL('" + txtUserPageURL.ClientID + "')){this.disabled=true;document.getElementById('DivWait').style.display = '';document.getElementById('DivData').style.display = 'none';}else{alert('URL is invalid. Please read the instructions on the page.'); return false;}");
+            // txtUserPageURL.Attributes.Add("onfocus", "this.value=''");
+            btnGo.Attributes.Add("onclick", "return warn('" + txtUserPageURL.ClientID + "', '" + btnGo.ClientID + "');");
 
             if (Page.IsPostBack)
             {
@@ -54,7 +69,11 @@
                 string endTag = "<b>Occupation: </b>";
 
                 string power = fnSubstring(startTag, endTag, _subString, true, false); // returns something like this: <span class=power> Power = 139 (Vote Weight = 88.57%)<span class="ajax_info" onClick='javascript:get_help_js("1111171270", 171270)'><img src='/images/layout/info.png'></img></span>   <div id='1111171270' class="helpdiv" style="display: none;">     Loading... </div></span></p><br><p>
+
                 power = fnSubstring(startTag, @"<span class=""ajax_info""", power, false, false); // returns something like this: Power = 139 (Vote Weight = 88.57%)
+
+
+                lt1.Text = power;
 
                 //Substring _subString
                 startTag = "My Mountains";
@@ -119,6 +138,7 @@
                 endTag = "</center>";
                 _subString = fnSubstring(startTag, endTag, _subString, false, false);
 
+
                 //Make the URLs absolute
                 _subString = _subString.Replace("href='/", "href='http://www.summitpost.org/");
 
@@ -129,9 +149,12 @@
                     _csvUrls = _csvUrls + GetURLandShortenSubstring() + ",";
                 }
 
-                lt1.Text = lt1.Text + "<div style='float: left'>" + d + GetHitsVotesScoreAndReturnAsTable() + "<i>(Click a column header above to sort by that column)</i></div>";
-                lt1.Text = lt1.Text + "<div style='float: left; padding-left:5px;'>" + power + "<br />"
-                    + "<a style='text-decoration:none; color:black;' href='" + txtUserPageURL.Text + "' target='_blank'>" + img + "</a></div>";
+                lt1.Text += GetHitsVotesScoreAndReturnAsTable();
+
+
+                //lt1.Text = lt1.Text + "<div style='float: left'>" + d + GetHitsVotesScoreAndReturnAsTable() + "<i>(Click a column header above to sort by that column)</i></div>";
+                //lt1.Text = lt1.Text + "<div style='float: left; padding-left:5px;'>" + power + "<br />"
+                //    + "<a style='text-decoration:none; color:black;' href='" + txtUserPageURL.Text + "' target='_blank'>" + img + "</a></div>";
             }
         }
 
@@ -146,10 +169,10 @@
             string Score = string.Empty;
             string Votes = string.Empty;
             StringBuilder bldr = new StringBuilder();
+
             for (int i = 0; i < URLs.Length - 1; i++)
+            // for (int i = 0; i < 1; i++)
             {
-                //if (i < 2)
-                //{
                 if (i == 0)
                 {
                     bldr.Append("<table id='myTable' class='normal tablesorter' border=1 cellpadding=4 cellspacing=3>\r\n");
@@ -171,11 +194,7 @@
                 //Get "Created/Edited" dates
                 startTag = "<strong>Created/Edited: </strong> ";
                 endTag = "<p><strong>Object ID: </strong>";
-                Created = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: Jun 18, 2006  / Jun 19, 2006 <!--p><strong>Created: </strong> Jun 18, 2006 -->
-                Created = _startReplace + Created;
-                startTag = _startReplace;
-                endTag = "<!--p><strong>";
-                Created = fnSubstring(startTag, endTag, Created, false, false).Trim(); //returns something like this: Jun 18, 2006  / Jun 19, 2006
+                Created = fnSubstring(startTag, endTag, _subString, false, false).Trim();
                 string[] CE = Created.Split(Convert.ToChar("/"));
                 Created = CE[0].Trim();
                 Edited = CE[1].Trim();
@@ -197,9 +216,11 @@
                 _subString = fnSubstring(startTag, endTag, _subString, true, true);
 
                 //Get "hits" 
-                startTag = "<strong>Hits: </strong> ";
-                endTag = "&nbsp;<span style=";
-                Hits = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 132
+                startTag = "<strong>Hits: ";
+                endTag = "<span style=";
+                Hits = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 
+                Hits = Hits.Replace("&nbsp;", "").Trim();
+                Hits = Hits.Replace("</strong>", "").Trim();
 
                 //Get "Votes"  
                 startTag = "<span id=num_votes>";
@@ -223,7 +244,7 @@
                 bldr.Append("'><span style='text-transform:capitalize;'>");
                 bldr.Append(mt);
                 bldr.Append("</span></a></td><td align='right'>");
-                bldr.Append(Convert.ToInt32(Hits) + 1);
+                bldr.Append(Hits);
                 bldr.Append("</td><td align='right'>");
                 bldr.Append(Votes);
                 bldr.Append("</td><td>");
@@ -386,8 +407,7 @@
         <br />
         This tool looks up the hits, votes, and page score for all the mountains & rocks
     belonging to a particular summitpost user.
-   
-        <br />
+    <br />
         <br />
         First you will need to obtain the User Page URL of the summitpost user you seeking
     Mountain & Rock statistics for. Every mountain page on summitpost has a "Page By"
@@ -396,8 +416,7 @@
     and wait for the data to come back. It can take a long time for the data to come
     back because this page has to open all the Mountain & Rock pages of the that particular
     user to get the statistics. So please be patient.
-   
-        <br />
+    <br />
         <br />
         <b>Please enter in the URL of the summitpost User's Page.</b>
         <br />
