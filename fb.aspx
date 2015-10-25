@@ -6,46 +6,7 @@
 <!DOCTYPE html>
 <html>
 <head id="Head1" runat="server">
-    <title runat="server" id="ThePageTitle">Mountains & Rocks Stats</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
-    <script src="js/jquery.tablesorter.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $("#myTable").tablesorter();
-        });
-    </script>
-    <script>
-        function warn(clientId, clientId2) {
-            if (confirm('This may take several minutes, do you wish to continue?')) {
-                if (checkURL(clientId)) {
-                    //document.getElementById(clientId2).disabled = true;  //this stops the post, so don't use it!
-                    $('#' + clientId2).hide();
-                    $('#DivData').hide();  //hide the previous results. 
-                    $('#DivWait').slideDown('slow');
-                    return true;
-                }
-                else {
-                    alert('URL is invalid. Please read the instructions on the page.');
-                    return false;
-                }
-            }
-            else {
-                return false;
-            }
-        }
 
-        function checkURL(TheID) {
-            var v = document.getElementById(TheID).value;
-            v = $.trim(v);
-            document.getElementById(TheID).value = v;
-            var i = v.indexOf("http://www.summitpost.org/users/");
-
-            if (i == 0 && i < v.length)
-                return true;
-            else
-                return false;
-        }
-    </script>
     <script language="C#" runat="server">        
         private string _subString = string.Empty;
         private string _csvUrls = string.Empty;
@@ -54,110 +15,39 @@
         protected void Page_Load(object sender, EventArgs e)
         {
             //lt1.Text = HttpUtility.UrlDecode("https%3A%2F%2Fscontent-sjc2-1.xx.fbcdn.net%2Fhphotos-xat1%2Ft31.0-8%2F12038709_10153013807076441_6923057461943687752_o.jpg");
-            
+
             // txtUserPageURL.Attributes.Add("onfocus", "this.value=''");
-            btnGo.Attributes.Add("onclick", "return warn('" + txtUserPageURL.ClientID + "', '" + btnGo.ClientID + "');");
 
             if (Page.IsPostBack)
             {
-                txtUserPageURL.Text = txtUserPageURL.Text.Trim().ToLower();
-
                 //Get the HTML for another webpage and save it to _subString
-                _subString = ScrapeHTML(txtUserPageURL.Text); //"http://www.summitpost.org/users/dean/1160"); //"http://www.summitpost.org/users/vanman798/23249");
+                _subString = ScrapeHTML(txtUserPageURL.Text);
 
                 string img = _subString; //save all the html to later get the user image from it.
-
-                string startTag = "<span class=power>";
-                string endTag = "<b>Occupation: </b>";
-
-                string power = fnSubstring(startTag, endTag, _subString, true, false); // returns something like this: <span class=power> Power = 139 (Vote Weight = 88.57%)<span class="ajax_info" onClick='javascript:get_help_js("1111171270", 171270)'><img src='/images/layout/info.png'></img></span>   <div id='1111171270' class="helpdiv" style="display: none;">     Loading... </div></span></p><br><p>
-
-                power = fnSubstring(startTag, @"<span class=""ajax_info""", power, false, false); // returns something like this: Power = 139 (Vote Weight = 88.57%)
-
-
-                lt1.Text = power;
-
-                //Substring _subString
-                startTag = "My Mountains";
-                endTag = "My Routes";
-                _subString = fnSubstring(startTag, endTag, _subString, true, false);
-
-                //lt1.Text = _subString;
-
-                //Get the My Mountains title
-                string title = _subString;
-                endTag = "</div>";
-                title = fnSubstring(startTag, endTag, title, true, false);
-                string userName = txtUserPageURL.Text;  //http://www.summitpost.org/users/vanman798/23249 
-                userName = userName.Replace("http://www.summitpost.org/users/", _startReplace);
-                userName = userName.Replace("/", "/");
-                userName = fnSubstring(_startReplace, "/", userName, false, false);
-
-                //<a href='/vanman798/769161'><img height='500' width='375' alt="vanman798" src='/images/medium/769161.JPG'></img></a>
-                startTag = "<a href='/" + userName + "/";
-                endTag = "<span class=basics>";
-                img = fnSubstring(startTag, endTag, img, false, false);
-                startTag = "src='/";
-                endTag = "'></img>";
-                img = fnSubstring(startTag, endTag, img, true, false);
-                img = img.Replace("src='/", "src='http://www.summitpost.org/");
-                img = "<img " + img + "' alt='" + userName + "' title='" + power + "' />";
-
-                userName = userName.ToUpper() + "'s ";
-                //Display the title
-                lt1.Text = "<h3 style='margin:0;'>"
-                    + "<a style='text-decoration:none; color:black;' href='" + txtUserPageURL.Text + "' target='_blank'>"
-                    + title.Replace("My", userName)
-                    + "</a></h3>\r\n";
-
-                //time stamp
-                DateTime RightNow = DateTime.Now;
-                string d = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(RightNow.Month)
-                            + " " + RightNow.Day.ToString() + ", "
-                            + RightNow.Year.ToString() + " ";
-                string h = RightNow.Hour.ToString();
-                string m = RightNow.Minute.ToString();
-
-                string am = " am";
-                if (Convert.ToInt16(h) > 12)
+                //&amp
+                string startTag = ";src=";
+                string endTag = ".jpg";
+                img = img.Replace("&amp;src=", "&amp,src=");
+                string[] URLs = img.Split(Convert.ToChar(","));
+                string temp = string.Empty;
+                string lag = "";
+                lt1.Text = "URL length = " + URLs.Length + "<hr />";
+                for (int i = 0; i < URLs.Length; i++)
                 {
-                    h = (Convert.ToInt16(h) - 12).ToString();
-                    am = " pm";
+                    temp = HttpUtility.UrlDecode(fnSubstring(startTag, endTag, URLs[i], false, true));
+                    //temp = HttpUtility.UrlDecode(URLs[i]);
+
+                    if (temp != lag)
+                    {
+                        if (temp.IndexOf("https://") == 0)
+                        {
+                            lt1.Text += "" +temp + "\n\n<br />";
+                            lag = temp;
+                        }
+                    }
                 }
 
-                if (h.Length == 1)
-                    h = "0" + h;
-
-                if (m.Length == 1)
-                    m = "0" + m;
-
-                d = d + h + ":" + m + am;
-
-                //Update page title
-                ThePageTitle.Text = title.Replace("My", userName) + " : " + d;
-
-                //Get just the <table> of My Mountains  
-                startTag = "<center>";
-                endTag = "</center>";
-                _subString = fnSubstring(startTag, endTag, _subString, false, false);
-
-
-                //Make the URLs absolute
-                _subString = _subString.Replace("href='/", "href='http://www.summitpost.org/");
-
-                //Loop substring, all the while extracting URLs from it and then shortening it, until it runs out of anchor tags
-                while (_subString.IndexOf("</a>") >= 0)
-                {
-                    //Make a CVS list of the URLs, each these pages in turn will need to be screen scraped
-                    _csvUrls = _csvUrls + GetURLandShortenSubstring() + ",";
-                }
-
-                //lt1.Text += GetHitsVotesScoreAndReturnAsTable();
-
-
-                lt1.Text = lt1.Text + "<div style='float: left'>" + d + GetHitsVotesScoreAndReturnAsTable() + "<i>(Click a column header above to sort by that column)</i></div>";
-                lt1.Text = lt1.Text + "<div style='float: left; padding-left:5px;'>" + power + "<br />"
-                    + "<a style='text-decoration:none; color:black;' href='" + txtUserPageURL.Text + "' target='_blank'>" + img + "</a></div>";
+                lt1.Text = "<ol>" + lt1.Text + "</ol>";
             }
         }
 
@@ -415,29 +305,14 @@
 </head>
 <body>
     <form id="form1" runat="server">
-        <a href="http://www.summitpost.org/" target="_blank">
-            <img src="http://www.summitpost.org/images/layout/logo2.gif" alt="SummitPost.org"
-                border="0"></a>
-        <br />
-        <br />
-        This tool looks up the hits, votes, and page score for all the mountains & rocks
-    belonging to a particular summitpost user.
+       Scrap FB
     <br />
         <br />
-        First you will need to obtain the User Page URL of the summitpost user you seeking
-    Mountain & Rock statistics for. Every mountain page on summitpost has a "Page By"
-    credit, click that link and you will be taken to that users user page. Copy the
-    URL from the browsers address bar, and paste it in the textbox below. Next hit "Go!",
-    and wait for the data to come back. It can take a long time for the data to come
-    back because this page has to open all the Mountain & Rock pages of the that particular
-    user to get the statistics. So please be patient.
-    <br />
+        <b>Step 1, get html from FB Photo Album, and make an HTML page from it:</b>
         <br />
-        <b>Please enter in the URL of the summitpost User's Page.</b>
+        For example http://screenscrapper/fb.html
         <br />
-        For example <i>http://www.summitpost.org/users/dean/1160</i>, or <i>http://www.summitpost.org/users/mrwasatch/405</i>
-        <br />
-        <asp:TextBox ID="txtUserPageURL" runat="server" Width="400" Text="http://www.summitpost.org/users/vanman798/23249"></asp:TextBox>
+        <asp:TextBox ID="txtUserPageURL" runat="server" Width="400" Text="http://screenscrapper/fb.html"></asp:TextBox>
         <asp:Button ID="btnGo" runat="server" Text="Go!" />
         <hr />
         <div id="DivWait" style="display: none">
