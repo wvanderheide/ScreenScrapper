@@ -1,4 +1,4 @@
-Put these in a database table, and that can be read for my new website home page,
+Put these in a database table, and that can be read from for my new website home page,
 
 https://scontent-sjc2-1.xx.fbcdn.net/hphotos-xat1/t31.0-8/12038709_10153013807076441_6923057461943687752_o.jpg
 https://scontent-sjc2-1.xx.fbcdn.net/hphotos-xta1/t31.0-8/12068519_10153013807851441_5442116460005895564_o.jpg
