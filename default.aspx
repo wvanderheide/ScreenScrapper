@@ -9,7 +9,7 @@
     <title runat="server" id="ThePageTitle">Mountains & Rocks Stats</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
     <script src="js/jquery.tablesorter.min.js"></script>
-    <script type="text/javascript">
+    <script>
         $(document).ready(function () {
             $("#myTable").tablesorter();
         });
@@ -80,6 +80,7 @@
                 endTag = "My Routes";
                 _subString = fnSubstring(startTag, endTag, _subString, true, false);
 
+                //lt1.Text = _subString;
 
                 //Get the My Mountains title
                 string title = _subString;
@@ -149,12 +150,12 @@
                     _csvUrls = _csvUrls + GetURLandShortenSubstring() + ",";
                 }
 
-                lt1.Text += GetHitsVotesScoreAndReturnAsTable();
+                //lt1.Text += GetHitsVotesScoreAndReturnAsTable();
 
 
-                //lt1.Text = lt1.Text + "<div style='float: left'>" + d + GetHitsVotesScoreAndReturnAsTable() + "<i>(Click a column header above to sort by that column)</i></div>";
-                //lt1.Text = lt1.Text + "<div style='float: left; padding-left:5px;'>" + power + "<br />"
-                //    + "<a style='text-decoration:none; color:black;' href='" + txtUserPageURL.Text + "' target='_blank'>" + img + "</a></div>";
+                lt1.Text = lt1.Text + "<div style='float: left'>" + d + GetHitsVotesScoreAndReturnAsTable() + "<i>(Click a column header above to sort by that column)</i></div>";
+                lt1.Text = lt1.Text + "<div style='float: left; padding-left:5px;'>" + power + "<br />"
+                    + "<a style='text-decoration:none; color:black;' href='" + txtUserPageURL.Text + "' target='_blank'>" + img + "</a></div>";
             }
         }
 
@@ -189,74 +190,81 @@
                     bldr.Append("<tbody>\r\n");
                 }
 
-                _subString = ScrapeHTML(URLs[i]);
-
-                //Get "Created/Edited" dates
-                startTag = "<strong>Created/Edited: </strong> ";
-                endTag = "<p><strong>Object ID: </strong>";
-                Created = fnSubstring(startTag, endTag, _subString, false, false).Trim();
-                string[] CE = Created.Split(Convert.ToChar("/"));
-                Created = CE[0].Trim();
-                Edited = CE[1].Trim();
-
-                string[] Flip = Created.Split(Convert.ToChar(","));    //Created = Flip[1] + "-" + Flip[0]; //2006-Jun 18
-                string[] MonthAndDay = Flip[0].Split(Convert.ToChar(" "));
-                Created = Flip[1] + "-" + fnConvertNamedMonthToInt(MonthAndDay[0]) + "-" + fnPadDay(MonthAndDay[1]);
+                try
+                {
+                    _subString = ScrapeHTML(URLs[i]);
 
 
-                Flip = Edited.Split(Convert.ToChar(","));
-                MonthAndDay = Flip[0].Split(Convert.ToChar(" "));
-                Edited = Flip[1] + "-" + fnConvertNamedMonthToInt(MonthAndDay[0]) + "-" + fnPadDay(MonthAndDay[1]);
+                    //Get "Created/Edited" dates
+                    startTag = "<strong>Created/Edited: </strong> ";
+                    endTag = "<p><strong>Object ID: </strong>";
+                    Created = fnSubstring(startTag, endTag, _subString, false, false).Trim();
+                    string[] CE = Created.Split(Convert.ToChar("/"));
+                    Created = CE[0].Trim();
+                    Edited = CE[1].Trim();
+
+                    string[] Flip = Created.Split(Convert.ToChar(","));    //Created = Flip[1] + "-" + Flip[0]; //2006-Jun 18
+                    string[] MonthAndDay = Flip[0].Split(Convert.ToChar(" "));
+                    Created = Flip[1] + "-" + fnConvertNamedMonthToInt(MonthAndDay[0]) + "-" + fnPadDay(MonthAndDay[1]);
+
+
+                    Flip = Edited.Split(Convert.ToChar(","));
+                    MonthAndDay = Flip[0].Split(Convert.ToChar(" "));
+                    Edited = Flip[1] + "-" + fnConvertNamedMonthToInt(MonthAndDay[0]) + "-" + fnPadDay(MonthAndDay[1]);
 
 
 
-                //Narrow down _substring
-                startTag = "<strong>Hits:";
-                endTag = "</span> Votes";
-                _subString = fnSubstring(startTag, endTag, _subString, true, true);
+                    //Narrow down _substring
+                    startTag = "<strong>Hits:";
+                    endTag = "</span> Votes";
+                    _subString = fnSubstring(startTag, endTag, _subString, true, true);
 
-                //Get "hits" 
-                startTag = "<strong>Hits: ";
-                endTag = "<span style=";
-                Hits = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 
-                Hits = Hits.Replace("&nbsp;", "").Trim();
-                Hits = Hits.Replace("</strong>", "").Trim();
+                    //Get "hits" 
+                    startTag = "<strong>Hits: ";
+                    endTag = "<span style=";
+                    Hits = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 
+                    Hits = Hits.Replace("&nbsp;", "").Trim();
+                    Hits = Hits.Replace("</strong>", "").Trim();
 
-                //Get "Votes"  
-                startTag = "<span id=num_votes>";
-                endTag = "</span> Votes";
-                Votes = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 16
+                    //Get "Votes"  
+                    startTag = "<span id=num_votes>";
+                    endTag = "</span> Votes";
+                    Votes = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 16
 
-                //Get "Page Score" 
-                startTag = "<strong>Page Score: <span id=score >";
-                endTag = "</span>%</strong>";
-                Score = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 88.43
+                    //Get "Page Score" 
+                    startTag = "<strong>Page Score: <span id=score >";
+                    endTag = "</span>%</strong>";
+                    Score = fnSubstring(startTag, endTag, _subString, false, false); //returns something like this: 88.43
 
-                //Get Mt Name
-                string mt = URLs[i].Replace("http://www.summitpost.org/", _startReplace);
-                mt = fnSubstring(_startReplace, "/", mt, false, false);
-                mt = mt.Replace("-", "&nbsp;");
+                    //Get Mt Name
+                    string mt = URLs[i].Replace("http://www.summitpost.org/", _startReplace);
+                    mt = fnSubstring(_startReplace, "/", mt, false, false);
+                    mt = mt.Replace("-", "&nbsp;");
 
-                bldr.Append("<tr>\r\n");
-                bldr.Append("<td>");
-                bldr.Append("<a target='_blank' href='");
-                bldr.Append(URLs[i]);
-                bldr.Append("'><span style='text-transform:capitalize;'>");
-                bldr.Append(mt);
-                bldr.Append("</span></a></td><td align='right'>");
-                bldr.Append(Hits);
-                bldr.Append("</td><td align='right'>");
-                bldr.Append(Votes);
-                bldr.Append("</td><td>");
-                bldr.Append(Score);
-                bldr.Append("</td>");
-                bldr.Append("<td>");
-                bldr.Append(Created);
-                bldr.Append("</td><td>");
-                bldr.Append(Edited);
-                bldr.Append("</td>");
-                bldr.Append("</tr>\r\n");
-                //}
+                    bldr.Append("<tr>\r\n");
+                    bldr.Append("<td>");
+                    bldr.Append("<a target='_blank' href='");
+                    bldr.Append(URLs[i]);
+                    bldr.Append("'><span style='text-transform:capitalize;'>");
+                    bldr.Append(mt);
+                    bldr.Append("</span></a></td><td align='right'>");
+                    bldr.Append(Hits);
+                    bldr.Append("</td><td align='right'>");
+                    bldr.Append(Votes);
+                    bldr.Append("</td><td>");
+                    bldr.Append(Score);
+                    bldr.Append("</td>");
+                    bldr.Append("<td>");
+                    bldr.Append(Created);
+                    bldr.Append("</td><td>");
+                    bldr.Append(Edited);
+                    bldr.Append("</td>");
+                    bldr.Append("</tr>\r\n");
+                }
+                catch
+                {
+
+                }
 
                 if (i == URLs.Length - 2)
                     bldr.Append("</tbody></table>\r\n");
@@ -281,9 +289,14 @@
                 retVal = _subString.Substring(startIndex, length); // returns something like this "http://www.summitpost.org/mount-alderson/774289'>Mount Alderson"
 
             //Get ride of the trailing info
-            e = "'>";
-            startIndex = retVal.IndexOf(e);
-            retVal = retVal.Substring(0, startIndex);
+            try
+            {
+                e = "'>";
+                startIndex = retVal.IndexOf(e);
+                retVal = retVal.Substring(0, startIndex);
+            }
+            catch
+            { }
 
 
             //Shorten up the substring by removing the section we just parsed data from
